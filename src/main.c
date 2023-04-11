@@ -59,6 +59,10 @@
 /* === Definicion y Macros ================================================= */
 
 /* === Declaraciones de tipos de datos internos ============================ */
+typedef struct parametros_s {
+    digital_output_t led;
+    uint16_t delay;
+} * parametros_t;
 
 /* === Declaraciones de funciones internas ================================= */
 
@@ -69,6 +73,8 @@ static board_t board;
 /* === Definiciones de variables externas ================================== */
 
 /* === Definiciones de funciones internas ================================== */
+
+
 
 void Blinking(void * parameters) {
     while (true) {
@@ -88,7 +94,18 @@ void Blinking(void * parameters) {
  */
 int main(void) {
     /* Inicializaciones y configuraciones de dispositivos */
+    static struct parametros_s parametros[3];
+    static bool taskState = true;
     board = BoardCreate();
+
+    parametros[0].led = board->led_rojo;
+    parametros[0].delay = 500;
+
+    parametros[1].led = board->led_verde;
+    parametros[1].delay = 750;
+
+    parametros[2].led = board->led_amarillo;
+    parametros[2].delay = 250;
 
     /* Creación de las tareas */
     xTaskCreate(Blinking, "Baliza", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
