@@ -166,16 +166,17 @@ int main(void) {
     board = BoardCreate();
 
     parametros[0].led = board->led_rojo;
-    parametros[0].delay = 500;
+    parametros[0].delay = 500;  //500mseg
 
     parametros[1].led = board->led_verde;
-    parametros[1].delay = 750;
+    parametros[1].delay = 750;  //750mseg
 
     parametros[2].led = board->led_amarillo;
-    parametros[2].delay = 250;
+    parametros[2].delay = 250;  //250mseg
 
     /* Creación de las tareas */
     //xTaskCreate(Blinking, "Baliza", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+
     xTaskCreate(Blinking, "Rojo", configMINIMAL_STACK_SIZE, &parametros[0], tskIDLE_PRIORITY + 1, NULL);
     xTaskCreate(Blinking, "Verde", configMINIMAL_STACK_SIZE, &parametros[1], tskIDLE_PRIORITY + 1, NULL);
     xTaskCreate(BlinkingSync, "Amarillo", configMINIMAL_STACK_SIZE, &parametros[2], tskIDLE_PRIORITY + 1, NULL);
@@ -186,6 +187,7 @@ int main(void) {
 
     /* vTaskStartScheduler solo retorna si se detiene el sistema operativo */
     while (1) {
+
     };
 
     /* El valor de retorno es solo para evitar errores en el compilador*/
