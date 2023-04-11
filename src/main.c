@@ -73,13 +73,80 @@ static board_t board;
 /* === Definiciones de variables externas ================================== */
 
 /* === Definiciones de funciones internas ================================== */
+/*
+ void Rojo(void * parameters) {
+    while (true) {
+        DigitalOutputToggle(board->led_rojo);
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+}
 
+void Verde(void * parameters) {
+    while (true) {
+        DigitalOutputToggle(board->led_verde);
+        vTaskDelay(pdMS_TO_TICKS(750));
+    }
+}
 
+void Amarillo(void * parameters) {
+    while (true) {
+        DigitalOutputToggle(board->led_amarillo);
+        vTaskDelay(pdMS_TO_TICKS(250));
+    }
+}
+
+void Azul(void * parameters) {
+    while (true) {
+        if (DigitalInputHasActivated(board->boton_cambiar)) {
+            DigitalOutputToggle(board->led_azul);
+        }
+    }
+} 
+*/
 
 void Blinking(void * parameters) {
+    parametros_t parametros = (parametros_t)parameters;
+
     while (true) {
-        DigitalOutputToggle(board->led_azul);
-        vTaskDelay(pdMS_TO_TICKS(500));
+        DigitalOutputToggle(parametros->led);
+        vTaskDelay(pdMS_TO_TICKS(parametros->delay));
+    }
+}
+
+void BlinkingSync(void * parameters) {
+    parametros_t parametros = (parametros_t)parameters;
+    TickType_t ultimo_valor;
+
+    // Initialise the ultimo_valor variable with the current time
+    ultimo_valor = xTaskGetTickCount();
+    while (true) {
+        DigitalOutputToggle(parametros->led);
+        vTaskDelayUntil(&ultimo_valor, pdMS_TO_TICKS(parametros->delay));
+    }
+}
+
+void TecScan(void * state) {
+    TaskHandle_t tarea;
+    bool taskState = state;
+
+    tarea = xTaskGetHandle("Rojo");
+
+    while (true) {
+        if (DigitalInputHasActivated(board->boton_cambiar)) {
+            if (taskState) {
+                vTaskSuspend(tarea);
+                taskState = false;
+            } else {
+                vTaskResume(tarea);
+                taskState = true;
+            }
+        }
+
+        if (DigitalInputHasActivated(board->boton_prender)) {
+            DigitalOutputToggle(board->led_azul);
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(150));
     }
 }
 
@@ -108,7 +175,11 @@ int main(void) {
     parametros[2].delay = 250;
 
     /* Creación de las tareas */
-    xTaskCreate(Blinking, "Baliza", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    //xTaskCreate(Blinking, "Baliza", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(Blinking, "Rojo", configMINIMAL_STACK_SIZE, &parametros[0], tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(Blinking, "Verde", configMINIMAL_STACK_SIZE, &parametros[1], tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(BlinkingSync, "Amarillo", configMINIMAL_STACK_SIZE, &parametros[2], tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(TecScan, "TecScan", configMINIMAL_STACK_SIZE, &taskState, tskIDLE_PRIORITY + 2, NULL);
 
     /* Arranque del sistema operativo */
     vTaskStartScheduler();
